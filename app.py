@@ -77,20 +77,36 @@ investment_amount = st.sidebar.number_input(
     step=1000
 )
 
-#fetching the data
+# fetching the data
+
 with st.spinner("Fetching live market data..."):
+
     data = load_data(stock, period)
-if isinstance(data.columns, pd.MultiIndex):
-    data.columns = data.columns.get_level_values(0)
+
+try:
+
+    if isinstance(data.columns, pd.MultiIndex):
+        data.columns = data.columns.get_level_values(0)
+
+except Exception:
+    pass
+
+if data.empty or "Close" not in data.columns:
+
+    st.error("Unable to fetch stock market data currently.")
+    st.stop()
+
+data = data.dropna()
 
 if data.empty:
-    st.error("No stock data available.")
+
+    st.error("No valid stock data available.")
     st.stop()
-    
+
 price_change = (
     (data["Close"].iloc[-1] - data["Close"].iloc[0])
     / data["Close"].iloc[0]
-)*100
+) * 100
 
 #overview metrics of the stocks
 display_stock = stock.replace(".NS", "")
