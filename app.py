@@ -80,18 +80,20 @@ investment_amount = st.sidebar.number_input(
 #fetching the data
 with st.spinner("Fetching live market data..."):
     data = load_data(stock, period)
-data.columns = data.columns.droplevel(1)
-price_change = (
-    (data["Close"].iloc[-1] - data["Close"].iloc[0])
-    / data["Close"].iloc[0]
-) * 100
+if isinstance(data.columns, pd.MultiIndex):
+    data.columns = data.columns.get_level_values(0)
 
 if data.empty:
     st.error("No stock data available.")
     st.stop()
+    
+price_change = (
+    (data["Close"].iloc[-1] - data["Close"].iloc[0])
+    / data["Close"].iloc[0]
+)*100
 
-display_stock = stock.replace(".NS", "")
 #overview metrics of the stocks
+display_stock = stock.replace(".NS", "")
 st.write(f"## {display_stock} Stock Overview")
 latest_close = float(data["Close"].iloc[-1])
 highest_price = float(data["High"].max())
@@ -100,20 +102,15 @@ lowest_price = float(data["Low"].min())
 col1, col2, col3, col4 = st.columns(4)
 
 price_change_display = round(price_change, 2)
-
 col1.metric("Latest Closing Price", f"₹ {latest_close:.2f}")
-
 col2.metric("Highest Price", f"₹ {highest_price:.2f}")
-
 col3.metric("Lowest Price", f"₹ {lowest_price:.2f}")
-
 col4.metric("Price Change", f"{price_change_display}%")
 
 st.divider()
 
 #price chart
 fig = go.Figure()
-
 fig.add_trace(
     go.Scatter(
         x=data.index,
@@ -124,7 +121,7 @@ fig.add_trace(
 )
 
 fig.update_layout(
-    title=f"{stock} Closing Price Trend",
+    title=f"{display_stock} Closing Price Trend",
     xaxis_title="Date",
     yaxis_title="Price",
     template="plotly_white",
@@ -145,7 +142,7 @@ try:
 
 except Exception as e:
 
-    st.error("Forecast generation failed.")
+    st.error("Forecast generation failed for the selected stock.")
     st.stop()
 
 forecast_fig = go.Figure()
