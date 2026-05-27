@@ -12,13 +12,20 @@ from utils.ai_insights import generate_ai_insight
 
 @st.cache_data
 def load_data(stock, period):
+
     data = yf.download(
         stock,
         period=period,
-        auto_adjust=False,
-        progress=False,
-        threads=False
+        progress=False
     )
+
+    if data.empty:
+        return data
+
+    # Handle MultiIndex columns safely
+    if isinstance(data.columns, pd.MultiIndex):
+        data.columns = data.columns.get_level_values(0)
+
     return data
 #page configuration
 st.set_page_config(
@@ -88,14 +95,7 @@ investment_amount = st.sidebar.number_input(
 
 with st.spinner("Fetching live market data..."):
 
-    try:
-
-        data = load_data(stock, period)
-
-    except Exception:
-
-        st.error("Unable to connect to Yahoo Finance currently.")
-        st.stop()
+    data = load_data(stock, period)
 
 if data.empty:
 
@@ -104,26 +104,15 @@ if data.empty:
 
 data = data.dropna()
 
-if data.empty or "Close" not in data.columns:
+if data.empty:
 
-    st.error("Stock data format is currently unavailable.")
-    st.stop()
-
-try:
-
-    latest_close_price = data["Close"].iloc[-1]
-    first_close_price = data["Close"].iloc[0]
-
-except Exception:
-
-    st.error("Unable to process stock market data.")
+    st.error("No valid stock data available.")
     st.stop()
 
 price_change = (
-    (latest_close_price - first_close_price)
-    / first_close_price
+    (data["Close"].iloc[-1] - data["Close"].iloc[0])
+    / data["Close"].iloc[0]
 ) * 100
-
 #overview metrics of the stocks
 display_stock = stock.replace(".NS", "")
 st.write(f"## {display_stock} Stock Overview")
