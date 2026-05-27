@@ -12,7 +12,14 @@ from utils.ai_insights import generate_ai_insight
 
 @st.cache_data
 def load_data(stock, period):
-    return yf.download(stock, period=period)
+    data = yf.download(
+        stock,
+        period=period,
+        auto_adjust=False,
+        progress=False,
+        threads=False
+    )
+    return data
 #page configuration
 st.set_page_config(
     page_title="Veltrig",
@@ -81,31 +88,40 @@ investment_amount = st.sidebar.number_input(
 
 with st.spinner("Fetching live market data..."):
 
-    data = load_data(stock, period)
+    try:
 
-try:
+        data = load_data(stock, period)
 
-    if isinstance(data.columns, pd.MultiIndex):
-        data.columns = data.columns.get_level_values(0)
+    except Exception:
 
-except Exception:
-    pass
+        st.error("Unable to connect to Yahoo Finance currently.")
+        st.stop()
 
-if data.empty or "Close" not in data.columns:
+if data.empty:
 
-    st.error("Unable to fetch stock market data currently.")
+    st.error("No stock market data available currently.")
     st.stop()
 
 data = data.dropna()
 
-if data.empty:
+if data.empty or "Close" not in data.columns:
 
-    st.error("No valid stock data available.")
+    st.error("Stock data format is currently unavailable.")
+    st.stop()
+
+try:
+
+    latest_close_price = data["Close"].iloc[-1]
+    first_close_price = data["Close"].iloc[0]
+
+except Exception:
+
+    st.error("Unable to process stock market data.")
     st.stop()
 
 price_change = (
-    (data["Close"].iloc[-1] - data["Close"].iloc[0])
-    / data["Close"].iloc[0]
+    (latest_close_price - first_close_price)
+    / first_close_price
 ) * 100
 
 #overview metrics of the stocks
