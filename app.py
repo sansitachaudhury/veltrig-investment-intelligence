@@ -39,6 +39,9 @@ Veltrig helps beginner investors:
 - Learn diversification
 - Build smarter investment habits
 """)
+st.caption(
+    "Future versions will provide deeper personalized recommendations based on investor behavior and preferences."
+)
 
 st.sidebar.header("Stock Selection")
 
@@ -76,6 +79,7 @@ investment_amount = st.sidebar.number_input(
     value=50000,
     step=1000
 )
+
 
 #fetching the data
 with st.spinner("Fetching live market data..."):
