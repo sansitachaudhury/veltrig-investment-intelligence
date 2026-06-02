@@ -53,6 +53,9 @@ Veltrig helps beginner investors:
 - Learn diversification
 - Build smarter investment habits
 """)
+st.caption(
+    "Future versions will provide deeper personalized recommendations based on investor behavior and preferences."
+)
 
 st.sidebar.header("Stock Selection")
 
