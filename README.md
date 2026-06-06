@@ -1,6 +1,6 @@
 # Veltrig
 
-Smarter stock insights for new investors. 123
+Smarter stock insights for new investors. 
 ---
 ## Live Demo
 
